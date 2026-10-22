@@ -1,66 +1,183 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>100 Mexicanos Dijeron</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="viewport">
-  <div id="stage">
-    <div id="bgLayer"></div>
-
-    <!-- PANTALLA PRINCIPAL ANTES DE COMENZAR -->
-    <section id="title" class="screen">
-      <div id="titleLogo"></div>
-      <div id="credit"></div>
-      <div id="startHint"></div>
-    </section>
-
-    <!-- MARQUESINA -->
-    <section id="board" class="screen hidden">
-     <div id="bframe">
-      <div id="boardLogo" class="logoBar"></div>
-      <div id="qbar"></div>
-
-      <aside id="teamA" class="team a">
-        <div class="tname"><span></span></div>
-        <div class="tscore">0</div>
-        <div class="tturn"></div>
-        <ul class="players"></ul>
-      </aside>
-
-      <main id="center">
-        <div id="info"><span id="roundInfo"></span><span id="phaseInfo"></span><span id="bankInfo"></span></div>
-        <div id="rows"></div>
-        <div id="strikes"></div>
-      </main>
-
-      <aside id="teamB" class="team b">
-        <div class="tname"><span></span></div>
-        <div class="tscore">0</div>
-        <div class="tturn"></div>
-        <ul class="players"></ul>
-      </aside>
-     </div>
-    </section>
-
-    <div id="bigx" class="hidden"></div>
-    <div id="winner" class="hidden"></div>
-
-    <div id="hud">
-      <span id="voiceStatus"></span>
-      <button id="btnVoice" title="Voz">🎤</button>
-      <button id="btnFs" title="Pantalla completa">⛶</button>
-      <button id="btnMenu" title="Menú">☰</button>
-    </div>
-
-    <div id="menuOverlay" class="hidden"></div>
-    <div id="toast"></div>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>100 Mexicanos Dijeron</title>
+<style>
+:root{--bg1:#1b2f8f;--bg2:#050a2e;--gold:#ffc61a;--blue:#1d6bff;--red:#e8262d;--panel:#0a1450}
+body[data-skin=verde]{--bg1:#0f7a3a;--bg2:#021a0c;--panel:#06381a}
+body[data-skin=morado]{--bg1:#6a1fb5;--bg2:#12032b;--panel:#2a0a5c}
+body[data-skin=oscuro]{--bg1:#333;--bg2:#000;--panel:#111}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:Impact,"Arial Black",sans-serif;color:#fff;background:radial-gradient(circle at 50% 0,var(--bg1),var(--bg2)) center/cover fixed;overflow:hidden}
+.hide{display:none!important}
+#intro{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer}
+.logo{font-size:min(11vw,120px);line-height:.95;color:var(--gold);-webkit-text-stroke:3px #b3260b;text-shadow:0 6px 0 #7a1405,0 0 40px #ff9a00;letter-spacing:2px}
+.logo b{color:#e9eefc;display:block;-webkit-text-stroke:3px #1b2f8f;text-shadow:0 6px 0 #0a1450}
+.sub{margin-top:24px;background:#0a1450;border:2px solid var(--gold);border-radius:20px;padding:6px 22px;color:var(--gold);font-size:18px}
+.blink{margin-top:30px;animation:b 1.2s infinite;font-size:20px}@keyframes b{50%{opacity:.2}}
+#game{height:100%;display:flex;flex-direction:column;padding:10px 16px}
+#title{text-align:center;font-size:min(5vw,46px);color:var(--gold);text-shadow:0 3px 0 #7a1405}
+#main{flex:1;display:grid;grid-template-columns:1fr 2.4fr 1fr;gap:14px;min-height:0}
+.team{border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:10px;border:3px solid #fff3;transition:.3s}
+.team h2{margin:0;font-size:clamp(16px,2.2vw,28px);text-align:center}
+.team.azul{background:linear-gradient(#0d3fb5,#06185a)}.team.rojo{background:linear-gradient(#b8141a,#4d0509)}
+.team.ctl{box-shadow:0 0 40px 8px var(--gold);border-color:var(--gold);transform:scale(1.03)}
+.score{font-size:min(9vw,90px);background:#000a;border-radius:14px;padding:4px 18px;min-width:80%;text-align:center}
+.xs{margin-top:auto;font-size:min(7vw,64px);color:var(--red);letter-spacing:6px;text-shadow:0 0 12px #f00}
+#center{display:flex;flex-direction:column;gap:8px;min-height:0}
+#qtxt{background:var(--panel);border:3px solid var(--gold);border-radius:16px;padding:10px;text-align:center;font-size:clamp(16px,2.4vw,30px)}
+#board{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0;background:var(--panel);border:4px solid var(--gold);border-radius:20px;padding:10px}
+.row{flex:1;display:flex;align-items:center;gap:10px;border:2px solid #4fa3ff;border-radius:40px;background:linear-gradient(#10206b,#050c33);padding:0 14px 0 6px;font-size:clamp(16px,2.6vw,34px);cursor:pointer;min-height:0}
+.num{width:2em;height:2em;border-radius:50%;background:radial-gradient(#ff5a5a,#b00);border:3px solid #fff;display:grid;place-items:center;flex:none;font-size:.8em}
+.row .t{flex:1;letter-spacing:3px;color:#7f93d9}.row .p{background:var(--gold);color:#222;border-radius:10px;padding:0 12px;min-width:2.2em;text-align:center}
+.row.on .t{color:#fff;letter-spacing:1px;text-transform:uppercase}.row.on{border-color:var(--gold);animation:pop .5s}
+.row:not(.on) .p{visibility:hidden}@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.05)}}
+#info{display:flex;justify-content:space-between;font-size:clamp(14px,1.8vw,22px);color:var(--gold)}
+#bar{text-align:center;font:12px Arial;color:#fff9;padding-top:4px}
+#flash{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;font-size:min(30vw,300px);color:var(--red);text-shadow:0 0 40px #f00;opacity:0}
+#flash.go{animation:f 1.1s}@keyframes f{0%{opacity:1;transform:scale(.6)}30%{opacity:1;transform:scale(1)}100%{opacity:0}}
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:9;overflow:auto}
+.box{background:linear-gradient(#10206b,#050c33);border:4px solid var(--gold);border-radius:22px;padding:20px;width:min(94vw,720px);max-height:94vh;overflow:auto;font-family:Arial,sans-serif}
+.box h3{margin:0 0 12px;text-align:center;color:var(--gold);font:22px Impact}
+.mi{display:flex;gap:12px;align-items:center;width:100%;margin:8px 0;padding:10px;border:2px solid #4fa3ff;border-radius:40px;background:#0b1a66;color:var(--gold);font:22px Impact;cursor:pointer;text-align:left}
+.mi:hover{background:#17309a}.mi i{font-style:normal;background:#d11;border:2px solid #fff;color:#fff;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font-size:18px}
+.mi small{font:12px Arial;color:#cfd8ff;display:block}
+label{display:block;margin:8px 0 3px;font-size:13px;color:#cfd8ff}
+input,textarea,select{width:100%;padding:7px;border-radius:8px;border:1px solid #4fa3ff;background:#050c33;color:#fff;font:14px Arial}
+textarea{height:280px;font-family:monospace}
+.btn{padding:9px 14px;border:0;border-radius:10px;background:var(--gold);font:bold 14px Arial;cursor:pointer;margin:6px 6px 0 0}.btn.g{background:#34405f;color:#fff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}p.h{font-size:12px;color:#aab7ee;margin:4px 0}
+@media(max-width:700px){#main{grid-template-columns:1fr}.team{flex-direction:row;justify-content:space-between}.xs{margin:0}}
+</style></head>
+<body data-skin="clasico">
+<div id="intro"><div class="logo">★ 100 ★<b id="iT">MEXICANOS</b></div><div class="sub" id="iC"></div><div class="blink">PRESIONA CUALQUIER TECLA O HAZ CLIC PARA EMPEZAR</div></div>
+<div id="game" class="hide">
+  <div id="title"></div>
+  <div id="main">
+    <div class="team azul" id="tA"><h2 id="nA"></h2><div class="score" id="sA">0</div></div>
+    <div id="center"><div id="info"><span id="inR"></span><span id="inB"></span></div><div id="qtxt"></div><div id="board"></div><div class="xs" id="xs" style="text-align:center"></div></div>
+    <div class="team rojo" id="tR"><h2 id="nR"></h2><div class="score" id="sR">0</div></div>
   </div>
+  <div id="bar"></div>
 </div>
-<script src="questions.js"></script>
-<script src="app.js"></script>
-</body>
-</html>
+<div id="flash"></div>
+<div id="menu" class="modal hide"><div class="box" id="mbox"></div></div>
+<script src="preguntas.js"></script>
+<script>
+const $=s=>document.querySelector(s), KEY='c100m_v1';
+const DEF_KEYS={strike:'x',azul:'z',rojo:'m',next:'n',daAzul:'ArrowLeft',daRojo:'ArrowRight',full:'f',reset:'r',leer:'v'};
+const KEYNAMES={strike:'Marcar X (error)',azul:'Pulsador Azul',rojo:'Pulsador Rojo',next:'Siguiente ronda',daAzul:'Dar puntos a Azul',daRojo:'Dar puntos a Rojo',full:'Pantalla completa',reset:'Reiniciar pulsadores/X',leer:'Leer la pregunta otra vez'};
+let C=JSON.parse(localStorage.getItem(KEY)||'null')||JSON.parse(JSON.stringify(window.CONFIG));
+C.ajustes=Object.assign({skin:'clasico',bg:'',vol:.7,mute:false,voz:true,vozNombre:'',vozRate:1,vozPitch:1,vozPuntos:true,teclas:{}},C.ajustes||{});
+C.ajustes.teclas=Object.assign({},DEF_KEYS,C.ajustes.teclas);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(C));
+let S,capturing=null;
+function fresh(){S={r:0,q:0,azul:0,rojo:0,bank:0,rev:[],x:0,ctl:null,paid:false,end:false}}fresh();
+const Q=()=>C.preguntas[S.q%C.preguntas.length], MUL=()=>C.multiplicadores[S.r]||1;
+
+/* ---------- SONIDO (mp3 en /sounds; si no existen usa beeps) ---------- */
+const SND=['intro','reveal','strike','buzz','win'];
+let ac;function beep(n){try{ac=ac||new AudioContext();const t=[[660,.15],[880,.2],[160,.6],[520,.2],[990,.5]][SND.indexOf(n)]||[440,.2];
+ const o=ac.createOscillator(),g=ac.createGain();o.type=n==='strike'?'sawtooth':'triangle';o.frequency.value=t[0];g.gain.value=C.ajustes.vol*.3;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+t[1])}catch(e){}}
+function play(n){if(C.ajustes.mute)return;const a=new Audio('sounds/'+n+'.mp3');a.volume=C.ajustes.vol;a.play().catch(()=>beep(n))}
+
+/* ---------- VOZ (Web Speech API) ---------- */
+const hayVoz='speechSynthesis' in window;
+const voces=()=>hayVoz?speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang)):[];
+if(hayVoz)speechSynthesis.onvoiceschanged=()=>{};
+function decir(t){const a=C.ajustes;if(!hayVoz||!a.voz||!t)return;speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(t),vs=voces();
+ u.voice=vs.find(v=>v.name===a.vozNombre)||vs.find(v=>/MX/i.test(v.lang))||vs[0]||null;
+ u.lang=u.voice?u.voice.lang:'es-MX';u.rate=a.vozRate;u.pitch=a.vozPitch;speechSynthesis.speak(u)}
+const decirPregunta=()=>decir(Q().p);
+const ganador=()=>S.azul===S.rojo?'¡Empate!':'¡Gana el '+(S.azul>S.rojo?C.equipoAzul:C.equipoRojo)+'!';
+
+/* ---------- RENDER ---------- */
+function applySkin(){document.body.dataset.skin=C.ajustes.skin;document.body.style.backgroundImage=C.ajustes.bg?`url("${C.ajustes.bg}")`:''}
+function render(){
+ applySkin();
+ $('#title').textContent=C.titulo;$('#iC').textContent=C.credito;document.title=C.titulo;
+ $('#nA').textContent=C.equipoAzul;$('#nR').textContent=C.equipoRojo;
+ $('#sA').textContent=S.azul;$('#sR').textContent=S.rojo;
+ $('#tA').classList.toggle('ctl',S.ctl==='azul');$('#tR').classList.toggle('ctl',S.ctl==='rojo');
+ const q=Q();
+ if(S.end){const w=S.azul===S.rojo?'¡EMPATE!':'¡GANA '+(S.azul>S.rojo?C.equipoAzul:C.equipoRojo)+'!';
+  $('#qtxt').textContent=w;$('#board').innerHTML='';$('#xs').textContent='';$('#inR').textContent='FIN DEL JUEGO';$('#inB').textContent='';$('#bar').textContent='Presiona '+kn('next')+' para jugar de nuevo';return}
+ $('#qtxt').textContent=q.p;
+ $('#inR').textContent=`RONDA ${S.r+1}/${C.multiplicadores.length}  (x${MUL()})`;$('#inB').textContent='BANCO: '+S.bank*MUL();
+ $('#board').innerHTML=q.r.map((a,i)=>`<div class="row ${S.rev[i]?'on':''}" data-i="${i}"><div class="num">${i+1}</div><div class="t">${S.rev[i]?a[0]:'● ● ● ● ● ● ●'}</div><div class="p">${a[1]}</div></div>`).join('');
+ $('#xs').textContent='✖ '.repeat(S.x).trim();
+ const k=C.ajustes.teclas;$('#bar').textContent=`1-${q.r.length}: revelar · ${kn('strike')}: X · ${kn('azul')}/${kn('rojo')}: pulsador · ${kn('daAzul')}/${kn('daRojo')}: dar puntos · ${kn('leer')}: leer pregunta · ${kn('next')}: siguiente · ${kn('full')}: pantalla completa · Esc: menú`;
+}
+const kn=a=>({ArrowLeft:'←',ArrowRight:'→',' ':'Espacio'}[C.ajustes.teclas[a]]||C.ajustes.teclas[a].toUpperCase());
+$('#board').onclick=e=>{const r=e.target.closest('.row');if(r)reveal(+r.dataset.i)};
+function reveal(i){if(S.end||S.rev[i]||!Q().r[i])return;S.rev[i]=1;S.bank+=Q().r[i][1];play('reveal');render();const a=Q().r[i];decir(C.ajustes.vozPuntos?a[0]+', '+a[1]+' puntos':a[0])}
+function strike(){if(S.end)return;if(S.x<3)S.x++;play('strike');decir('¡Error!');const f=$('#flash');f.textContent='✖';f.classList.remove('go');void f.offsetWidth;f.classList.add('go');render()}
+function award(t){if(S.end||S.paid||!S.bank)return;S[t]+=S.bank*MUL();S.paid=true;S.ctl=t;play('win');render();decir(S.bank*MUL()+' puntos para '+(t==='azul'?C.equipoAzul:C.equipoRojo))}
+function next(){
+ if(S.end){fresh();render();return}
+ S.r++;S.q++;S.bank=0;S.rev=[];S.x=0;S.ctl=null;S.paid=false;
+ if(S.r>=C.multiplicadores.length){S.end=true;play('win');render();decir(ganador());return}render();decirPregunta()}
+function buzz(t){if(S.end||S.ctl)return;S.ctl=t;play('buzz');render();decir('¡'+(t==='azul'?C.equipoAzul:C.equipoRojo)+'!')}
+function fullscreen(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+
+/* ---------- TECLADO ---------- */
+let started=false;
+function start(){if(started)return;started=true;$('#intro').classList.add('hide');$('#game').classList.remove('hide');play('intro');render();setTimeout(decirPregunta,1500)}
+$('#intro').onclick=start;
+addEventListener('keydown',e=>{
+ if(capturing){e.preventDefault();C.ajustes.teclas[capturing]=e.key.length===1?e.key.toLowerCase():e.key;capturing=null;save();menuTeclado();return}
+ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+ if(!started){start();return}
+ if(e.key==='Escape'){toggleMenu();return}
+ if(!$('#menu').classList.contains('hide')){if(/^[1-6]$/.test(e.key))menuAction(+e.key);return}
+ const k=C.ajustes.teclas,key=e.key.length===1?e.key.toLowerCase():e.key;
+ if(/^[1-9]$/.test(key))return reveal(+key-1);
+ const m={[k.strike]:strike,[k.azul]:()=>buzz('azul'),[k.rojo]:()=>buzz('rojo'),[k.next]:next,[k.daAzul]:()=>award('azul'),[k.daRojo]:()=>award('rojo'),[k.full]:fullscreen,[k.reset]:()=>{S.x=0;S.ctl=null;render()},[k.leer]:decirPregunta};
+ if(m[key]){e.preventDefault();m[key]()}
+});
+
+/* ---------- MENÚ (según el diseño del PDF) ---------- */
+const mb=h=>$('#mbox').innerHTML=h;
+function toggleMenu(){const m=$('#menu');m.classList.toggle('hide');if(!m.classList.contains('hide'))menuMain()}
+$('#menu').onclick=e=>{if(e.target.id==='menu')toggleMenu()};
+function menuMain(){mb(`<h3>MENÚ DE CONFIGURACIÓN DE 100 MEXICANOS DIJERON</h3>`+
+ [['SKINS / VISUALIZACIÓN','Cambia colores o pon tu propio fondo'],['CONFIGURAR TECLADO','Teclas, pulsadores, contadores, pantalla completa'],['SONIDOS Y VOZ','Volumen, voz que lee preguntas y respuestas'],['EDITAR LAS PREGUNTAS','Preguntas, nombre del juego y todos los textos'],['CERRAR MENÚ',''],['REINICIAR JUEGO','Pone marcadores en 0 y vuelve al inicio']]
+ .map((x,i)=>`<div class="mi" onclick="menuAction(${i+1})"><i>${i+1}</i><div>${x[0]}<small>${x[1]}</small></div></div>`).join(''))}
+function menuAction(n){[0,menuSkins,menuTeclado,menuSonidos,menuPreguntas,toggleMenu,()=>{fresh();started=false;$('#game').classList.add('hide');$('#intro').classList.remove('hide');toggleMenu()}][n]()}
+const back=`<button class="btn g" onclick="menuMain()">← Volver</button>`;
+function menuSkins(){mb(`<h3>1 · SKINS / VISUALIZACIÓN</h3><label>Skin</label><select id="sk" onchange="C.ajustes.skin=this.value;save();applySkin()">${['clasico','verde','morado','oscuro'].map(s=>`<option ${C.ajustes.skin===s?'selected':''}>${s}</option>`).join('')}</select>
+ <label>Imagen de fondo propia (URL o ruta, ej: skins/mi-fondo.jpg)</label><input id="bg" value="${C.ajustes.bg}" onchange="C.ajustes.bg=this.value;save();applySkin()">
+ <p class="h">Para más skins: agrega un bloque <code>body[data-skin=...]</code> en el CSS de index.html.</p>${back}`)}
+function menuTeclado(){mb(`<h3>2 · CONFIGURAR TECLADO</h3><p class="h">Haz clic en una tecla y presiona la nueva. Las respuestas siempre son los números 1-9.</p>`+
+ Object.keys(KEYNAMES).map(a=>`<div class="mi" style="font:16px Arial" onclick="capturing='${a}';this.querySelector('b').textContent='presiona una tecla...'"><div style="flex:1">${KEYNAMES[a]}</div><b>${kn(a)}</b></div>`).join('')+
+ `<button class="btn g" onclick="C.ajustes.teclas={...DEF_KEYS};save();menuTeclado()">Restaurar teclas</button>${back}`)}
+function menuSonidos(){mb(`<h3>3 · SONIDOS Y VOZ</h3><label>Volumen</label><input type="range" min="0" max="1" step=".05" value="${C.ajustes.vol}" oninput="C.ajustes.vol=+this.value;save()">
+ <label><input type="checkbox" style="width:auto" ${C.ajustes.mute?'checked':''} onchange="C.ajustes.mute=this.checked;save()"> Silenciar</label>
+ <p class="h">Para usar tus sonidos, pon archivos MP3 en la carpeta <b>sounds/</b> con estos nombres: ${SND.map(s=>s+'.mp3').join(', ')}. Si no existen, se usan tonos simples.</p>
+ ${SND.map(s=>`<button class="btn g" onclick="play('${s}')">▶ ${s}</button>`).join('')}
+ <h3 style="margin-top:18px">🔊 VOZ NARRADORA</h3>
+ ${hayVoz?`<label><input type="checkbox" style="width:auto" ${C.ajustes.voz?'checked':''} onchange="C.ajustes.voz=this.checked;save();if(!this.checked)speechSynthesis.cancel()"> Leer preguntas y respuestas en voz alta</label>
+ <label><input type="checkbox" style="width:auto" ${C.ajustes.vozPuntos?'checked':''} onchange="C.ajustes.vozPuntos=this.checked;save()"> Decir también los puntos de cada respuesta</label>
+ <label>Voz</label><select onchange="C.ajustes.vozNombre=this.value;save();decir('Cien mexicanos dijeron')"><option value="">Automática (español de México)</option>${voces().map(v=>`<option value="${v.name}" ${C.ajustes.vozNombre===v.name?'selected':''}>${v.name} (${v.lang})</option>`).join('')}</select>
+ <label>Velocidad</label><input type="range" min=".5" max="1.5" step=".05" value="${C.ajustes.vozRate}" oninput="C.ajustes.vozRate=+this.value;save()">
+ <label>Tono</label><input type="range" min=".5" max="1.5" step=".05" value="${C.ajustes.vozPitch}" oninput="C.ajustes.vozPitch=+this.value;save()">
+ <button class="btn g" onclick="decir(Q().p)">▶ Probar con la pregunta actual</button>
+ <p class="h">Si la lista de voces sale vacía, cierra y abre este menú. Chrome y Edge tienen las mejores voces en español.</p>`:'<p class="h">Tu navegador no soporta voz.</p>'}<br>${back}`)}
+const toTxt=()=>C.preguntas.map(q=>q.p+'\n'+q.r.map(a=>a[0]+' | '+a[1]).join('\n')).join('\n\n');
+function fromTxt(t){return t.trim().split(/\n\s*\n/).map(b=>{const l=b.trim().split('\n').map(x=>x.trim()).filter(Boolean);
+ return{p:l[0],r:l.slice(1).map(x=>{const i=x.lastIndexOf('|');return[x.slice(0,i).trim(),parseInt(x.slice(i+1))||0]})}}).filter(q=>q.p&&q.r.length)}
+function menuPreguntas(){mb(`<h3>4 · EDITAR PREGUNTAS Y TEXTOS</h3>
+ <div class="g2"><div><label>Nombre del juego</label><input id="eT" value="${C.titulo}"></div><div><label>Crédito (pantalla de inicio)</label><input id="eC" value="${C.credito}"></div>
+ <div><label>Equipo azul</label><input id="eA" value="${C.equipoAzul}"></div><div><label>Equipo rojo</label><input id="eR" value="${C.equipoRojo}"></div></div>
+ <label>Multiplicadores por ronda (separados por coma; el número de valores = número de rondas)</label><input id="eM" value="${C.multiplicadores.join(',')}">
+ <label>Preguntas (pregunta, luego "respuesta | puntos" por línea; separa preguntas con una línea en blanco)</label><textarea id="eQ">${toTxt().replace(/</g,'&lt;')}</textarea>
+ <button class="btn" onclick="saveQ()">💾 Guardar</button><button class="btn g" onclick="exportJ()">⬇ Exportar JSON</button>
+ <button class="btn g" onclick="$('#imp').click()">⬆ Importar JSON</button><input id="imp" type="file" accept=".json" class="hide" onchange="importJ(this.files[0])">
+ <button class="btn g" onclick="if(confirm('¿Borrar cambios y volver a preguntas.js?')){localStorage.removeItem(KEY);location.reload()}">Restaurar originales</button>${back}`)}
+function saveQ(){const p=fromTxt($('#eQ').value),m=$('#eM').value.split(',').map(x=>+x.trim()).filter(x=>x>0);
+ if(!p.length)return alert('Sin preguntas válidas');Object.assign(C,{titulo:$('#eT').value,credito:$('#eC').value,equipoAzul:$('#eA').value,equipoRojo:$('#eR').value,preguntas:p,multiplicadores:m.length?m:[1]});save();fresh();render();alert('Guardado ✔ (el juego se reinició)')}
+function exportJ(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='mis-preguntas.json';a.click()}
+function importJ(f){if(!f)return;f.text().then(t=>{try{C=Object.assign(C,JSON.parse(t));save();fresh();render();menuPreguntas()}catch(e){alert('JSON inválido')}})}
+applySkin();
+</script></body></html>
